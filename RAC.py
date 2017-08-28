@@ -54,10 +54,10 @@ class RAC(object):
                 steps += 1
                 self.agent.update_parameters(state, action, reward, next_state)
                 state = next_state
-            if i % 50 == 0:
+            if i % 100 == 0:
                 # test agent
                 test_agent(self.agent, i)
-            logger.debug("Completed Iteration. Time taken: %f", (datetime.now() - t_start).total_seconds())
+            logger.debug("Completed Iteration %d. Time taken: %f", i, (datetime.now() - t_start).total_seconds())
 
 
 def test_agent(agent, episode_count):
