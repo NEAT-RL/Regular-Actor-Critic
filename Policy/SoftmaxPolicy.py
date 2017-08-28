@@ -83,29 +83,20 @@ class SoftmaxPolicy(object):
         :param action:
         :return:
         """
-        original_parameters = np.copy(self.parameters)
+        _, pi = self.get_action(state_feature)
 
-        para_derivatives = np.zeros(len(original_parameters), dtype=float)
-        delta = 0.0001
-        for i in range(len(original_parameters)):
-            new_parameters = np.copy(original_parameters)
-            new_parameters[i] = new_parameters[i] - delta
+        dlogpi_parameters = np.empty(self.num_actions, dtype=object)
+        # for the theta parameter used for action (use index)
+        for i in range(self.num_actions):
+            if i == action:
+                dlogpi_parameters[i] = np.dot((1 - pi[action]), state_feature)
+            else:
+                theta_x = self.parameters[self.dimension * i: self.dimension * (i + 1)]
+                theta_action = self.parameters[self.dimension * action: self.dimension * (action + 1)]
+                component1 = -1.0 * pi[action] * (np.exp(np.dot(theta_x, state_feature))/np.exp(np.dot(theta_action, state_feature)))
+                dlogpi_parameters[i] = np.dot(component1, state_feature)
 
-            self.set_policy_parameters(new_parameters)
-            _, action_distribution = self.get_action(state_feature)
-            prev_prob = action_distribution[action]
-
-            new_parameters[i] = new_parameters[i] + delta * 2
-            self.set_policy_parameters(new_parameters)
-            _, action_distribution = self.get_action(state_feature)
-            after_prob = action_distribution[action]
-
-            para_derivatives[i] = (np.log(after_prob + self.tiny) - np.log(prev_prob + self.tiny)) / (2. * delta)
-
-        # Replace parameters with the original parameters
-        self.set_policy_parameters(original_parameters)
-
-        return para_derivatives  # return new parameters
+        return np.concatenate(dlogpi_parameters)
 
     def update_parameters(self, delta):
         self.set_policy_parameters(self.parameters + delta)

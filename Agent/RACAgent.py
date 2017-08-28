@@ -19,15 +19,34 @@ Add Cartpole settings
 class RACAgent(object):
     def __init__(self, dimension, num_actions, state_length, feature_size):
         self.dimension = dimension
-        self.feature = self.__create_discretised_feature(state_length, feature_size)
+        # self.feature = self.__create_discretised_feature(state_length, feature_size)
+        self.feature = self.__create_discretised_feature([10, 10, 10, 10], 4, [-2.4, -10, -41.8 * math.pi / 180.0, -10],
+                                                         [2.4, 10, 41.8 * math.pi / 180.0, 10])
         self.valueFunction = ValueFunction(dimension)
         self.policy = SoftmaxPolicy(dimension, num_actions)
         self.fitness = 0
         self.beta = 0.005
 
     @staticmethod
-    def __create_discretised_feature(state_length, output_dimension):
-        return Feature.DiscretizedFeature(state_length, output_dimension)
+    def __create_discretised_feature(partition_size, state_length, state_lower_bounds, state_upper_bounds):
+        """
+        :param partition_size: Array of partition_sizes for each state field
+        :param state_length: Number of states == input dimension (state)
+        :param state_lower_bounds: array of lower bounds for each state field
+        :param state_upper_bounds: array of upper bounds for each state field
+        :return: discretised feature
+        """
+        intervals = []
+        output_dimension = 0
+
+        for i in range(state_length):
+            output_dimension += partition_size[i]
+            state_col = Feature.DiscretizedFeature.create_partition(state_lower_bounds[i],
+                                                                    state_upper_bounds[i], partition_size[i])
+            intervals.append(state_col)
+
+        # return Feature.DiscretizedFeature(state_length, output_dimension)
+        return Feature.DiscretizedFeature(state_length, output_dimension, intervals)
 
     def get_feature(self):
         return self.feature

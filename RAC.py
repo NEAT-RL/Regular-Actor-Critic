@@ -53,11 +53,11 @@ class RAC(object):
 
                 steps += 1
                 self.agent.update_parameters(state, action, reward, next_state)
-                update_count += 1
                 state = next_state
+            if i % 50 == 0:
                 # test agent
-                test_agent(self.agent, update_count)
-                logger.debug("Completed Iteration. Time taken: %f", (datetime.now() - t_start).total_seconds())
+                test_agent(self.agent, i)
+            logger.debug("Completed Iteration. Time taken: %f", (datetime.now() - t_start).total_seconds())
 
 
 def test_agent(agent, episode_count):
@@ -65,7 +65,6 @@ def test_agent(agent, episode_count):
     if display_game:
         outdir = 'videos/tmp/neat-data/{0}-{1}'.format(env_test.spec.id, str(datetime.now()))
         env_test = wrappers.Monitor(env_test, directory=outdir, force=True)
-
 
     logger.debug("Generating best agent result: %d", episode_count)
     t_start = datetime.now()
@@ -160,15 +159,12 @@ if __name__ == '__main__':
     # Run until the winner from a generation is able to solve the environment
     # or the user interrupts the process.
     display_game = True if args.display == 'true' else False
-
-
-
     try:
         agent.execute_algorithm()
     except KeyboardInterrupt:
         logger.debug("User break.")
-
-    env.close()
+    finally:
+        env.close()
 
     # Upload to the scoreboard. We could also do this from another
     # logger.info("Successfully ran RandomAgent. Now trying to upload results to the scoreboard. If it breaks, you can always just try re-uploading the same results.")
