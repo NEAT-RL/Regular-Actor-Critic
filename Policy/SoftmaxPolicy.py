@@ -83,20 +83,23 @@ class SoftmaxPolicy(object):
         :param action:
         :return:
         """
-        _, pi = self.get_action(state_feature)
+        delta = 0.00001
 
-        dlogpi_parameters = np.empty(self.num_actions, dtype=object)
-        # for the theta parameter used for action (use index)
-        for i in range(self.num_actions):
-            if i == action:
-                dlogpi_parameters[i] = np.dot((1 - pi[action]), state_feature)
-            else:
-                theta_x = self.parameters[self.dimension * i: self.dimension * (i + 1)]
-                theta_action = self.parameters[self.dimension * action: self.dimension * (action + 1)]
-                component1 = -1.0 * pi[action] * (np.exp(np.dot(theta_x, state_feature))/np.exp(np.dot(theta_action, state_feature)))
-                dlogpi_parameters[i] = np.dot(component1, state_feature)
+        original_policy_parameters = self.get_policy_parameters()
+        para_derivatives = np.zeros(self.num_actions*self.dimension, dtype=float)
+        for i in range(len(para_derivatives)):
+            new_policy_parameters = np.copy(original_policy_parameters)
+            new_policy_parameters[i] -= delta
+            self.set_policy_parameters(new_policy_parameters)
+            _, prev_prob = self.get_action(state_feature)
 
-        return np.concatenate(dlogpi_parameters)
+            new_policy_parameters[i] += 2*delta
+            self.set_policy_parameters(new_policy_parameters)
+            _, after_prob = self.get_action(state_feature)
+
+            para_derivatives[i] = (after_prob- prev_prob) / (2. * delta)
+
+        return para_derivatives
 
     def update_parameters(self, delta):
         self.set_policy_parameters(self.parameters + delta)
