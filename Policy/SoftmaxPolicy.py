@@ -86,7 +86,7 @@ class SoftmaxPolicy(object):
         delta = 0.00001
 
         original_policy_parameters = self.get_policy_parameters()
-        para_derivatives = np.zeros(self.num_actions*self.dimension, dtype=float)
+        para_derivatives = np.zeros(shape=(self.num_actions * self.dimension), dtype=float)
         for i in range(len(para_derivatives)):
             new_policy_parameters = np.copy(original_policy_parameters)
             new_policy_parameters[i] -= delta
@@ -97,7 +97,7 @@ class SoftmaxPolicy(object):
             self.set_policy_parameters(new_policy_parameters)
             _, after_prob = self.get_action(state_feature)
 
-            para_derivatives[i] = (after_prob- prev_prob) / (2. * delta)
+            para_derivatives[i] = (after_prob[action] - prev_prob[action]) / (2. * delta)
 
         return para_derivatives
 
